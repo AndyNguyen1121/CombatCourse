@@ -3,8 +3,6 @@
 
 #include "Items/Item.h"
 #include "DrawDebugHelpers.h"
-#include "FrameTypes.h"
-#include "MovieSceneObjectBindingID.h"
 #include "CombatCourse/DebugMacros.h"
 using namespace std;
 
@@ -36,12 +34,11 @@ float AItem::TransformCosine() const
 void AItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	const FVector Location = GetActorLocation();
-
 	ElapsedTime += DeltaTime;
 	const float DesiredHeightOffset = TransformSine();
 	AddActorWorldOffset(FVector(0, 0, DesiredHeightOffset) * DeltaTime);
+
+	DRAW_VECTOR_SINGLE_FRAME(GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 200)
 }
 
 
