@@ -51,5 +51,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* Camera;
-	
+
+	FRotator ControlRotation;
 };

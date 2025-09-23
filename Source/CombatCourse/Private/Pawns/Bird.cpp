@@ -7,6 +7,7 @@
 #include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ABird::ABird()
@@ -48,6 +49,9 @@ void ABird::BeginPlay()
 
 void ABird::Move(const FInputActionValue& Value)
 {
+	if (!GetController())
+		return;
+	
 	FVector2D MovementInput = Value.Get<FVector2D>();
 
 	if (!MovementInput.IsNearlyZero())
@@ -62,10 +66,17 @@ void ABird::Move(const FInputActionValue& Value)
 
 void ABird::Turn(const FInputActionValue& Value)
 {
-	FVector2D RotationInput = Value.Get<FVector2D>();
+	if (!GetController())
+		return;
 	
-	RotationInput.Y = FMath::Clamp(GetActorRotation().Pitch + RotationInput.Y, -75.f, 75.f);
-	Controller->SetControlRotation(FRotator(RotationInput.Y, GetActorRotation().Yaw + RotationInput.X, 0));
+	FVector2D RotationInput = Value.Get<FVector2D>() * 3;
+
+	ControlRotation = Controller->GetControlRotation();
+
+	ControlRotation.Pitch = FMath::Clamp(ControlRotation.Pitch + RotationInput.Y, -75.f, 75.f);
+	ControlRotation.Yaw += RotationInput.X;
+
+	Controller->SetControlRotation(ControlRotation);
 	
 	GEngine->AddOnScreenDebugMessage(1, 3, FColor::Red, FString::Printf(TEXT("%s"), *RotationInput.ToString()));
 }
@@ -73,7 +84,14 @@ void ABird::Turn(const FInputActionValue& Value)
 void ABird::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
+	FRotator SlerpRotation = FMath::RInterpTo(
+		GetActorRotation(),
+		ControlRotation,
+		GetWorld()->GetDeltaSeconds(),
+		10.f);
+	
+	SetActorRotation(SlerpRotation);
 }
 
 void ABird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
